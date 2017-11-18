@@ -11,23 +11,21 @@ typedef struct {
   int tiempo;
 }Autos;
 
-int leerArchivo(Autos *autos);
+Autos *leerArchivo(Autos *aut,int *cant);
 
 int main(int argc, char const *argv[]) {
   int canautos;
   int maxweight = atoi(argv[1]);
   Autos *autos;
-  canautos=leerArchivo(autos);
 
-  printf("%d\n",canautos );
-  printf("%d\n",autos[1].segundos);
+  autos=leerArchivo(autos,&canautos);
 
 
 
   return 0;
 }
 
-int leerArchivo(Autos *aut){
+Autos *leerArchivo(Autos *aut,int *cant){
 
   int ch,vehiculos,buffer1;
   char *buffer2= (char*)malloc(sizeof(char)*10);
@@ -39,10 +37,12 @@ int leerArchivo(Autos *aut){
   while ((ch = fgetc(fp)) != EOF)
       if (ch == '\n')
          vehiculos++;
-
+  *cant=vehiculos;
   rewind(fp);
-  aut = (Autos*) malloc(sizeof(Autos)*vehiculos);
-  for( int i=0; i<5 ; i++ ){
+
+  aut=(Autos*)malloc(sizeof(Autos)*vehiculos);
+
+  for( int i=0; i<vehiculos ; i++ ){
         fscanf(fp,"%s",buffer2);
         strcpy(aut[i].patente,buffer2);
         fscanf(fp,"%d",&buffer1);
@@ -51,9 +51,8 @@ int leerArchivo(Autos *aut){
         aut[i].peso=buffer1;
         fscanf(fp,"%d",&buffer1);
         aut[i].tiempo=buffer1;
-        printf("%s\n",aut[i].patente);
         }
 
     fclose(fp);
-    return vehiculos;
+    return aut;
   }
