@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <semaphore.h>
 
 typedef struct {
   char patente[5];
@@ -14,13 +15,35 @@ typedef struct {
 Autos *leerArchivo(Autos *aut,int *cant);
 
 int main(int argc, char const *argv[]) {
-  int canautos;
+  
   int maxweight = atoi(argv[1]);
+  int kilo;
+  int canautos;
   Autos *autos;
-
   autos=leerArchivo(autos,&canautos);
 
+  sem_init(&peso, 0, maxweight);
+  sem_init(&en_puente, 0, 1);
+	
+  for(auto = 0; auto < canautos; auto++){
 
+    no_es_hijo = fork();
+  
+    if(no_es_hijo){
+    
+      sem_wait(&en_puente);
+      if(auto != canautos-1) usleep( autos[auto+1].segundos * pollingDelay * 10000 );
+    
+    }else{
+    
+      for(kilo = 0; kilo < autos[auto].peso; kilo++) sem_wait(&peso);
+      sem_signal(&en_puente);
+      usleep( autos[auto].tiempo * pollingDelay * 10000 );
+      for(kilo = 0; kilo < autos[auto].peso; kilo++) sem_signal(&peso);
+    
+    }
+
+  }
 
   return 0;
 }
