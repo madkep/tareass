@@ -22,6 +22,8 @@ int main(int argc, char const *argv[]) {
   Autos *autos;
   autos=leerArchivo(autos,&canautos);
 
+  sem_t peso;
+  sem_t en_puente;
   sem_init(&peso, 0, maxweight);
   sem_init(&en_puente, 0, 1);
 	
