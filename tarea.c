@@ -33,14 +33,14 @@ int main(int argc, char const *argv[]) {
     if(no_es_hijo){
     
       sem_wait(&en_puente);
-      if(auto != canautos-1) usleep( autos[auto+1].segundos * pollingDelay * 10000 );
+      if(car != canautos-1) usleep( autos[car+1].segundos * pollingDelay * 10000 );
     
     }else{
     
-      for(kilo = 0; kilo < autos[auto].peso; kilo++) sem_wait(&peso);
+      for(kilo = 0; kilo < autos[car].peso; kilo++) sem_wait(&peso);
       sem_signal(&en_puente);
-      usleep( autos[auto].tiempo * pollingDelay * 10000 );
-      for(kilo = 0; kilo < autos[auto].peso; kilo++) sem_signal(&peso);
+      usleep( autos[car].tiempo * pollingDelay * 10000 );
+      for(kilo = 0; kilo < autos[car].peso; kilo++) sem_signal(&peso);
     
     }
 
