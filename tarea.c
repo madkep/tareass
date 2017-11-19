@@ -40,9 +40,9 @@ int main(int argc, char const *argv[]) {
     }else{
     
       for(kilo = 0; kilo < autos[car].peso; kilo++) sem_wait(&peso);
-      sem_signal(&en_puente);
+      sem_post(&en_puente);
       usleep( autos[car].tiempo * SEGUNDO );
-      for(kilo = 0; kilo < autos[car].peso; kilo++) sem_signal(&peso);
+      for(kilo = 0; kilo < autos[car].peso; kilo++) sem_post(&peso);
     
     }
 
