@@ -9,56 +9,87 @@
 
 typedef struct {
   char patente[5];
-  int segundos;
+  int entrada;
   int peso;
   int tiempo;
-}Autos;
+}Vehiculo;
 
-Autos *leerArchivo(Autos *aut,int *cant);
+Vehiculo *leerArchivo(Vehiculo *autos,int *cant);
 
 int main(int argc, char const *argv[]) {
   
+  int aux;
   int maxweight = atoi(argv[1]);
-  int kilo, car, canautos, no_es_hijo;
-  Autos *autos;
-  autos=leerArchivo(autos,&canautos);
+  int kilo, n_auto, canautos, no_es_hijo, peso_puente, wpid;
+  sem_t puente;
+  sem_t en_puente; sem_t *ptr_en_pte = &en_puente;
+  sem_init(&puente, 0, maxweight);
+  sem_init(ptr_en_pte, 0, 0);
+  
+  Vehiculo *autos;
+  autos = leerArchivo(autos,&canautos);
 
-  sem_t peso;
-  sem_t en_puente;
-  sem_init(&peso, 0, maxweight);
-  sem_init(&en_puente, 0, 1);
-	
-  for(car = 0; car < canautos; car++){
+  //for(n_auto = 0; n_auto < canautos; n_auto++){
+		
+  	/*sem_getvalue(&puente, &peso_puente); 
+  	printf("%d %s esperando | peso %d\n",n_auto, autos[n_auto].patente,peso_puente);*/    
 
-    no_es_hijo = fork();
+		no_es_hijo = fork();
   
     if(no_es_hijo){
-    
-      sem_wait(&en_puente);
-      if(car != canautos-1) usleep( autos[car+1].segundos * SEGUNDO);
+    	
+			sem_getvalue(ptr_en_pte, &aux);
+			printf("Antes wait %d\n",aux);
+      sem_wait(ptr_en_pte);
+			printf("test\n");
+			sem_getvalue(ptr_en_pte, &aux);
+			printf("Dsp wait %d\n",aux);
+
+			/*sem_getvalue(&puente, &peso_puente);
+			printf("%d %s en puente | peso %d\n",n_auto, autos[n_auto].patente,peso_puente);*/
+
+      //if(n_auto != canautos-1) usleep( autos[n_auto+1].entrada * SEGUNDO);
     
     }else{
-    
-      for(kilo = 0; kilo < autos[car].peso; kilo++) sem_wait(&peso);
-      sem_post(&en_puente);
-      usleep( autos[car].tiempo * SEGUNDO );
-      for(kilo = 0; kilo < autos[car].peso; kilo++) sem_post(&peso);
-    
+    	
+      //for(kilo = 0; kilo < autos[n_auto].peso; kilo++) sem_wait(&puente);
+
+			usleep( 5 * SEGUNDO );
+
+			sem_getvalue(ptr_en_pte, &aux);
+			printf("Antes post %d\n",aux);
+			sem_post(ptr_en_pte);
+			sem_getvalue(ptr_en_pte, &aux);
+			printf("Dsp post %d\n",aux);
+
+      //usleep( autos[n_auto].tiempo * SEGUNDO );
+
+      //for(kilo = 0; kilo < autos[n_auto].peso; kilo++) sem_post(&puente);
+
+			/*sem_getvalue(&puente, &peso_puente);
+			printf("%d %s saliendo | peso %d\n",n_auto, autos[n_auto].patente,peso_puente);*/
+
+			return 0;
     }
 
-  }
+  //}
+
+	while( (wpid = wait(NULL)) > 0 );
+	
+	sem_destroy(&puente);
+  sem_destroy(ptr_en_pte);
 
   return 0;
 }
 
-Autos *leerArchivo(Autos *aut,int *cant){
-
-  int ch,vehiculos,buffer1;
-  char *buffer2= (char*)malloc(sizeof(char)*10);
+Vehiculo *leerArchivo(Vehiculo *autos,int *cant){
 
   FILE *fp;
 	fp = fopen( "vehiculos.txt","r");
 	if (fp==NULL) {fputs ("File error",stderr); exit (1);}
+
+	int ch,vehiculos,buffer1,i;
+  char *buffer2= (char*)malloc(sizeof(char)*10);
 
   while ((ch = fgetc(fp)) != EOF)
       if (ch == '\n')
@@ -66,19 +97,28 @@ Autos *leerArchivo(Autos *aut,int *cant){
   *cant=vehiculos;
   rewind(fp);
 
-  aut=(Autos*)malloc(sizeof(Autos)*vehiculos);
+  autos=(Vehiculo*)malloc(sizeof(Vehiculo)*vehiculos);
 
-  for( int i=0; i<vehiculos ; i++ ){
+  for( i = 0; i < vehiculos; i++ ){
         fscanf(fp,"%s",buffer2);
-        strcpy(aut[i].patente,buffer2);
-        fscanf(fp,"%d",&buffer1);
-        aut[i].segundos=buffer1;
-        fscanf(fp,"%d",&buffer1);
-        aut[i].peso=buffer1;
-        fscanf(fp,"%d",&buffer1);
-        aut[i].tiempo=buffer1;
+        strcpy(autos[i].patente,buffer2);
+        fscanf(fp,"%d",&autos[i].entrada);
+        fscanf(fp,"%d",&autos[i].peso);
+        fscanf(fp,"%d",&autos[i].tiempo);
         }
 
     fclose(fp);
-    return aut;
+    return autos;
   }
+
+/*---------------------------------------------------------------*/
+
+
+	/* Codigo de prueba para imprimir autos
+	int i;
+	for( i = 0; i < canautos; i++ ){
+        
+        printf("%s %d %d %d\n",autos[i].patente,autos[i].entrada,autos[i].peso,autos[i].tiempo);
+
+	}
+	*/
