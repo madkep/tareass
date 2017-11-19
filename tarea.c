@@ -17,7 +17,7 @@ Autos *leerArchivo(Autos *aut,int *cant);
 int main(int argc, char const *argv[]) {
   
   int maxweight = atoi(argv[1]);
-  int kilo, car, canautos;
+  int kilo, car, canautos, no_es_hijo;
   Autos *autos;
   autos=leerArchivo(autos,&canautos);
 
