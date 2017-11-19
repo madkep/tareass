@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <semaphore.h>
 
+#define SEGUNDO 1000000
+
 typedef struct {
   char patente[5];
   int segundos;
@@ -33,13 +35,13 @@ int main(int argc, char const *argv[]) {
     if(no_es_hijo){
     
       sem_wait(&en_puente);
-      if(car != canautos-1) usleep( autos[car+1].segundos * pollingDelay * 10000 );
+      if(car != canautos-1) usleep( autos[car+1].segundos * SEGUNDO);
     
     }else{
     
       for(kilo = 0; kilo < autos[car].peso; kilo++) sem_wait(&peso);
       sem_signal(&en_puente);
-      usleep( autos[car].tiempo * pollingDelay * 10000 );
+      usleep( autos[car].tiempo * SEGUNDO );
       for(kilo = 0; kilo < autos[car].peso; kilo++) sem_signal(&peso);
     
     }
