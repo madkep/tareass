@@ -17,8 +17,7 @@ Autos *leerArchivo(Autos *aut,int *cant);
 int main(int argc, char const *argv[]) {
   
   int maxweight = atoi(argv[1]);
-  int kilo;
-  int canautos;
+  int kilo, car, canautos;
   Autos *autos;
   autos=leerArchivo(autos,&canautos);
 
@@ -27,7 +26,7 @@ int main(int argc, char const *argv[]) {
   sem_init(&peso, 0, maxweight);
   sem_init(&en_puente, 0, 1);
 	
-  for(auto = 0; auto < canautos; auto++){
+  for(car = 0; car < canautos; car++){
 
     no_es_hijo = fork();
   
