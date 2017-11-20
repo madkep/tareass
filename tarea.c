@@ -1,6 +1,6 @@
 /*
-
-Felipe pon tus datos aca q amime da paja
+	
+Felipe Céspedes C.			19.787.201-2
 Vicente Fernández V.			19.619.730-3
 
 */
