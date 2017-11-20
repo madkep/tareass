@@ -52,6 +52,14 @@ int main(int argc, char const *argv[]) {
 	//un for para repetir el siguiente proceso por cada vehiculo
   for(n_auto = 0; n_auto < canautos; n_auto++){
 
+		//si el vehiculo actual pesa mas que maxweight, se omite
+		if( autos[n_auto].peso > maxweight ){
+
+			printf("[Vehiculo]: %s omitido por exceso de peso\n",autos[n_auto].patente);
+			continue;
+
+		}
+		
 		//espera la cantidad de segundos que entra despues del vehiculo anterior
 		usleep(autos[n_auto].entrada * SEGUNDO);
 		
