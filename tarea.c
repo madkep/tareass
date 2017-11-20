@@ -1,12 +1,26 @@
+/*
+
+Felipe pon tus datos aca q amime da paja
+Vicente Fernández V.			19.619.730-3
+
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <semaphore.h>
+#include <fcntl.h>
 
+//un segundo en microsegundos
 #define SEGUNDO 1000000
 
+//se dejan los ids de los semaforos en memoria compartida
+sem_t *puente;
+sem_t *en_pte;
+
+//se define un tipo de dato vehiculo
 typedef struct {
   char patente[5];
   int entrada;
@@ -14,111 +28,132 @@ typedef struct {
   int tiempo;
 }Vehiculo;
 
+//lee el archivo vehiculos.txt y coloca los vehiculos en el arreglo autos
 Vehiculo *leerArchivo(Vehiculo *autos,int *cant);
+
+//se encargan de incrementar y decrementar el peso actual del puente
+void entrar_puente(int peso);
+void salir_puente(int peso);
 
 int main(int argc, char const *argv[]) {
   
-  int aux;
+	//declaracion de variables
   int maxweight = atoi(argv[1]);
-  int kilo, n_auto, canautos, no_es_hijo, peso_puente, wpid;
-  sem_t puente;
-  sem_t en_puente; sem_t *ptr_en_pte = &en_puente;
-  sem_init(&puente, 0, maxweight);
-  sem_init(ptr_en_pte, 0, 0);
+	int n_auto, canautos, no_es_hijo, peso_puente, wpid;
+
+	//creacion de los semaforos
+  puente = sem_open("puente", O_CREAT, 0644, maxweight);
+  en_pte = sem_open("en_pte", O_CREAT, 0644, 0);
   
+	//se crea un arreglo y se carga de vehiculos
   Vehiculo *autos;
   autos = leerArchivo(autos,&canautos);
 
-  //for(n_auto = 0; n_auto < canautos; n_auto++){
-		
-  	/*sem_getvalue(&puente, &peso_puente); 
-  	printf("%d %s esperando | peso %d\n",n_auto, autos[n_auto].patente,peso_puente);*/    
+	//un for para repetir el siguiente proceso por cada vehiculo
+  for(n_auto = 0; n_auto < canautos; n_auto++){
 
+		//espera la cantidad de segundos que entra despues del vehiculo anterior
+		usleep(autos[n_auto].entrada * SEGUNDO);
+		
+		//se obtiene el peso actual del puente y se imprime por pantalla
+		sem_getvalue(puente, &peso_puente); 
+		printf("[Vehiculo]: %s entrando  [carga actual del puente]: %d toneladas\n", autos[n_auto].patente,maxweight-peso_puente);
+
+		//para crear el proceso hijo que representara al vehiculo pasando por el puente
 		no_es_hijo = fork();
   
+		//proceso padre
     if(no_es_hijo){
     	
-			sem_getvalue(ptr_en_pte, &aux);
-			printf("Antes wait %d\n",aux);
-      sem_wait(ptr_en_pte);
-			printf("test\n");
-			sem_getvalue(ptr_en_pte, &aux);
-			printf("Dsp wait %d\n",aux);
+			//espera a que el vehiculo (hijo) entre al puente
+			sem_wait(en_pte);
 
-			/*sem_getvalue(&puente, &peso_puente);
-			printf("%d %s en puente | peso %d\n",n_auto, autos[n_auto].patente,peso_puente);*/
-
-      //if(n_auto != canautos-1) usleep( autos[n_auto+1].entrada * SEGUNDO);
+			//se obtiene el peso actual del puente y se imprime por pantalla
+			sem_getvalue(puente, &peso_puente);
+			printf("[Vehiculo]: %s en puente [carga actual del puente]: %d toneladas\n", autos[n_auto].patente,maxweight-peso_puente);
     
+		//proceso hijo
     }else{
-    	
-      //for(kilo = 0; kilo < autos[n_auto].peso; kilo++) sem_wait(&puente);
 
-			usleep( 5 * SEGUNDO );
+			entrar_puente(autos[n_auto].peso);
 
-			sem_getvalue(ptr_en_pte, &aux);
-			printf("Antes post %d\n",aux);
-			sem_post(ptr_en_pte);
-			sem_getvalue(ptr_en_pte, &aux);
-			printf("Dsp post %d\n",aux);
+			//envia señal al padre para indicar que ya entro al puente
+			sem_post(en_pte);
 
-      //usleep( autos[n_auto].tiempo * SEGUNDO );
+			//se espera el tiempo que el vehiculo esta en el puente
+      usleep( autos[n_auto].tiempo * SEGUNDO );
 
-      //for(kilo = 0; kilo < autos[n_auto].peso; kilo++) sem_post(&puente);
+      salir_puente(autos[n_auto].peso);
 
-			/*sem_getvalue(&puente, &peso_puente);
-			printf("%d %s saliendo | peso %d\n",n_auto, autos[n_auto].patente,peso_puente);*/
+			//se obtiene el peso actual del puente y se imprime por pantalla
+			sem_getvalue(puente, &peso_puente);
+			printf("[Vehiculo]: %s saliendo  [carga actual del puente]: %d toneladas\n", autos[n_auto].patente,maxweight-peso_puente);
 
+			//se termina el proceso hijo
 			return 0;
     }
 
-  //}
+  }
 
+	//se esperan a todos los procesos hijos
 	while( (wpid = wait(NULL)) > 0 );
 	
-	sem_destroy(&puente);
-  sem_destroy(ptr_en_pte);
+	//se eliminan los semaforos
+	sem_unlink("puente");
+	sem_close(puente);
+  sem_unlink("en_pte");
+  sem_close(en_pte);
 
   return 0;
 }
 
+void entrar_puente(int peso){
+
+	int kilo;
+
+	for(kilo = 0; kilo < peso; kilo++) sem_wait(puente);
+	
+}
+
+void salir_puente(int peso){
+
+	int kilo;
+
+	for(kilo = 0; kilo < peso; kilo++) sem_post(puente);
+	
+}
+
 Vehiculo *leerArchivo(Vehiculo *autos,int *cant){
 
+	//se abre el archivo, en caso de fallar, se termina el programa
   FILE *fp;
 	fp = fopen( "vehiculos.txt","r");
 	if (fp==NULL) {fputs ("File error",stderr); exit (1);}
 
+	//creacion de variables
 	int ch,vehiculos,buffer1,i;
-  char *buffer2= (char*)malloc(sizeof(char)*10);
+  char *buffer2 = (char*)malloc(sizeof(char)*10);
 
+	//se cuenta la cantidad de vehiculos
   while ((ch = fgetc(fp)) != EOF)
       if (ch == '\n')
          vehiculos++;
-  *cant=vehiculos;
+  *cant = vehiculos;
   rewind(fp);
+	
+	//se reserva la memoria para el arreglo de vehiculos
+  autos = (Vehiculo*)malloc(sizeof(Vehiculo)*vehiculos);
 
-  autos=(Vehiculo*)malloc(sizeof(Vehiculo)*vehiculos);
-
+	//se ingresan los vehiculos al arreglo
   for( i = 0; i < vehiculos; i++ ){
         fscanf(fp,"%s",buffer2);
         strcpy(autos[i].patente,buffer2);
         fscanf(fp,"%d",&autos[i].entrada);
         fscanf(fp,"%d",&autos[i].peso);
         fscanf(fp,"%d",&autos[i].tiempo);
-        }
-
-    fclose(fp);
-    return autos;
   }
 
-/*---------------------------------------------------------------*/
-
-
-	/* Codigo de prueba para imprimir autos
-	int i;
-	for( i = 0; i < canautos; i++ ){
-        
-        printf("%s %d %d %d\n",autos[i].patente,autos[i].entrada,autos[i].peso,autos[i].tiempo);
-
-	}
-	*/
+	//se cierra el archivo y se retorna el arreglo de vehiculos
+  fclose(fp);
+  return autos;
+ }
