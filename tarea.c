@@ -1,8 +1,6 @@
-/*
-	
-Felipe Céspedes C.			19.787.201-2
-Vicente Fernández V.			19.619.730-3
-
+/*	
+Felipe Céspedes C.		19.787.201-2
+Vicente Fernández V.	19.619.730-3
 */
 
 #include <stdio.h>
