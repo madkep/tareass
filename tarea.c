@@ -1,8 +1,3 @@
-/*	
-Felipe Céspedes C.		19.787.201-2
-Vicente Fernández V.	19.619.730-3
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,6 +33,12 @@ int main(int argc, char const *argv[]) {
 	//declaracion de variables
   int maxweight = atoi(argv[1]);
 	int n_auto, canautos, no_es_hijo, peso_puente, wpid;
+
+	//se eliminan los semaforos en caso de que la ejecucion anterior haya fallado
+	sem_unlink("puente");
+	sem_close(puente);
+  sem_unlink("en_pte");
+  sem_close(en_pte);
 
 	//creacion de los semaforos
   puente = sem_open("puente", O_CREAT, 0644, maxweight);
@@ -134,7 +135,7 @@ Vehiculo *leerArchivo(Vehiculo *autos,int *cant){
 	//se abre el archivo, en caso de fallar, se termina el programa
   FILE *fp;
 	fp = fopen( "vehiculos.txt","r");
-	if (fp==NULL) {fputs ("File error",stderr); exit (1);}
+	if (fp==NULL) {fputs ("File error\n",stderr); exit (1);}
 
 	//creacion de variables
 	int ch,vehiculos,buffer1,i;
